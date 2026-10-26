@@ -2,10 +2,11 @@ clc; clear; close all;
 
 %% --- Harita secimi ---
 choice = menu('Map sec', 'Circle', 'Rectangle', 'Hand Figure');
+map_dir = fullfile(fileparts(mfilename('fullpath')), 'maps');
 switch choice
-    case 1, run('/Users/kasimesen/Desktop/Tasarım/2. Week/YuvarlakMap.m');
-    case 2, run('/Users/kasimesen/Desktop/Tasarım/2. Week/KareMap.m');
-    case 3, run('/Users/kasimesen/Desktop/Tasarım/2. Week/HandFigureMap.m');
+    case 1, run(fullfile(map_dir, 'YuvarlakMap.m'));
+    case 2, run(fullfile(map_dir, 'KareMap.m'));
+    case 3, run(fullfile(map_dir, 'HandFigureMap.m'));
     otherwise, error('Secim yapilmadi.');
 end
 if ~exist('waypoints','var') || size(waypoints,2)~=2 || size(waypoints,1)<2
@@ -58,13 +59,14 @@ Iz        = 2250;
 Cf        = 2*19000;
 Cr        = 2*19000;
 delta_max = deg2rad(30);
-ddelta_max_per_step = 10 * 0.02;
+ddelta_rate_max = 10;    % direksiyon hiz siniri [rad/s]
 
 %% --- Sim parametreleri ---
 Ts       = 0.02;
 T_end    = 350;
 goal_tol = 1.0;
 n_laps = 3;
+ddelta_max_per_step = ddelta_rate_max * Ts;   % QP icin adim basina [rad]
 
 %% --- MPC ayarlari ---
 N_p = 60;
