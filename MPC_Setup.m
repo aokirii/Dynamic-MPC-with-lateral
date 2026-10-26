@@ -1,13 +1,23 @@
 clc; clear; close all;
 
+%% --- Karsilastirma on ayari (run_compare; etkilesimsiz, tek kullanimlik) ---
+cmp = getappdata(0, 'mpc_compare_cfg');
+if ~isempty(cmp), rmappdata(0, 'mpc_compare_cfg'); end
+
 %% --- Harita secimi ---
-choice = menu('Map sec', 'Circle', 'Rectangle', 'Hand Figure');
-map_dir = fullfile(fileparts(mfilename('fullpath')), 'maps');
-switch choice
-    case 1, run(fullfile(map_dir, 'YuvarlakMap.m'));
-    case 2, run(fullfile(map_dir, 'KareMap.m'));
-    case 3, run(fullfile(map_dir, 'HandFigureMap.m'));
-    otherwise, error('Secim yapilmadi.');
+if isempty(cmp)
+    choice = menu('Map sec', 'Circle', 'Rectangle', 'Hand Figure');
+    map_dir = fullfile(fileparts(mfilename('fullpath')), 'maps');
+    switch choice
+        case 1, run(fullfile(map_dir, 'YuvarlakMap.m'));
+        case 2, run(fullfile(map_dir, 'KareMap.m'));
+        case 3, run(fullfile(map_dir, 'HandFigureMap.m'));
+        otherwise, error('Secim yapilmadi.');
+    end
+else
+    waypoints = cmp.waypoints;   % yol run_compare tarafindan verildi
+    startPt   = cmp.startPt;
+    goal      = cmp.goal;
 end
 if ~exist('waypoints','var') || size(waypoints,2)~=2 || size(waypoints,1)<2
     error('waypoints bulunamadi veya format yanlis. Nx2 olmali.');
@@ -54,6 +64,7 @@ L         = 2.7;
 lr        = 1.35;
 lf        = L - lr;
 v_const   = 5;
+if isfield(cmp, 'v_const'), v_const = cmp.v_const; end   % run_compare hizi
 m         = 1500;
 Iz        = 2250;
 Cf        = 2*19000;
