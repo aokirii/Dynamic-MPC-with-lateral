@@ -69,6 +69,7 @@ m         = 1500;
 Iz        = 2250;
 Cf        = 2*19000;
 Cr        = 2*19000;
+mu        = 0.75;         % yol tutus katsayisi (plant: Fiala doyma mu*Fz)
 delta_max = deg2rad(30);
 ddelta_rate_max = 1.5;   % direksiyon hiz siniri [rad/s]
 
@@ -182,6 +183,11 @@ assignin('base','L',         L);
 assignin('base','lr',        lr);
 assignin('base','v_const',   v_const);
 assignin('base','Ts',        Ts);
+assignin('base','m',         m);
+assignin('base','Iz',        Iz);
+assignin('base','Cf',        Cf);
+assignin('base','Cr',        Cr);
+assignin('base','mu',        mu);
 assignin('base','T_end',     T_end);
 assignin('base','x0_init',   sp(1));
 assignin('base','y0_init',   sp(2));

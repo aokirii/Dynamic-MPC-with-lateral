@@ -15,10 +15,10 @@ function mpc_viewer3d(sim_log, x_ref, y_ref)
 %     ise basit kutu cizilir. Yalnizca temel MATLAB kullanilir.
 %   * Turetilmis buyuklukler: ardisik ornekler plantin ardisik Euler adimlari
 %     oldugundan govde-cerceve hizlari (vx, vy), yaw hizi r, kayma acisi beta
-%     ve yanal ivme a_y konumlardan geri cikarilir. Base'te Cf, Cr, lr, L
-%     varsa (dinamik plant) lastik kayma acilari ve yanal kuvvetler de
-%     hesaplanir; yoksa bu katman kapali kalir. Kuvvetler base'teki Cf/Cr
-%     ile hesaplanir (plant icinde Cf = Cr = 2*19000 sabittir; bugun esit).
+%     ve yanal ivme a_y konumlardan geri cikarilir. Base'te Cf, Cr, lr, L,
+%     m, mu varsa (dinamik plant) lastik kayma acilari ve yanal kuvvetler de
+%     hesaplanir; yoksa bu katman kapali kalir. Kuvvetler plant ile ayni
+%     Fiala modeliyle (doyma mu*Fz, Fz statik agirlik dagilimi) hesaplanir.
 %   * Katmanlar: arac ustunde yon oku (siyah) ve hiz oku (turuncu; aradaki
 %     aci beta), dinamikte aks yanal kuvvet oklari (on: camgobegi, arka:
 %     sari); |e_y| ile renklenen iz + renk cubugu; genisletilmis HUD;
@@ -288,11 +288,12 @@ function D = derive_states(xs, ys, th, de, Ts)
     D.ay = dvy + D.vx(1:end-2) .* D.r(1:end-2);       % 1..N-2 tam deger
     if isempty(D.ay), D.ay = D.vx .* D.r;             % N = 2: fark yok, yalniz vx*r
     else, D.ay = pad(pad(D.ay)); end                  % N-1 ve N = a_y(N-2) kopyasi
-    % Lastik katmani yalnizca Cf, Cr, lr, L base'te ise (dinamik plant)
+    % Lastik katmani yalnizca Cf, Cr, lr, L, m, mu base'te ise (dinamik plant)
     D.tyre = false;
     try
         Cf = evalin('base', 'Cf');   Cr = evalin('base', 'Cr');
         D.lr = evalin('base', 'lr'); D.lf = evalin('base', 'L') - D.lr;
+        m  = evalin('base', 'm');    mu = evalin('base', 'mu');
     catch
         return
     end
@@ -300,8 +301,21 @@ function D = derive_states(xs, ys, th, de, Ts)
     a_r = -(D.vy - D.lr*D.r) ./ D.vx;
     stop = D.vx < 0.1;  a_f(stop) = 0;  a_r(stop) = 0;    % duran arac: kayma yok
     D.alpha_f = a_f;  D.alpha_r = a_r;
-    D.Fyf = Cf * a_f;  D.Fyr = Cr * a_r;
+    g = 9.81;  L = D.lf + D.lr;
+    Fzf = m*g*D.lr/L;  Fzr = m*g*D.lf/L;                  % statik agirlik dagilimi
+    D.Fyf = fiala(a_f, Cf, mu*Fzf);  D.Fyr = fiala(a_r, Cr, mu*Fzr);
     D.tyre = true;
+end
+
+function F = fiala(a, C, Fmax)
+% Fiala lastik modeli (Pacejka sunumu; Brown ve ark. 2017 denk. 6), isaret
+% F = +C*alpha; a_sl'de surekli, sifirda egim C, |a| >= a_sl doyma. Plant
+% (Bicycle_Plant) ile ayni formul.
+    t    = tan(a);
+    a_sl = atan(3*Fmax/C);
+    F    = C*t - C^2/(3*Fmax)*abs(t).*t + C^3/(27*Fmax^2)*t.^3;
+    sat  = abs(a) >= a_sl;
+    F(sat) = Fmax*sign(a(sat));
 end
 
 function [X, Y, Z] = arrow_xyz(p0, v, z)
