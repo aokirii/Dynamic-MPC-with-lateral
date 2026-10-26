@@ -86,6 +86,10 @@ Q   = diag([70, 10, 50, 30]);
 R   = 15.0;
 nx  = 4;
 nu  = 1;
+alpha_max    = deg2rad(6);   % kayma acisi siniri, on + arka aks (yumusak kisit; Inf = kapali)
+slack_w_lin  = 1e4;          % gevseme dogrusal cezasi [1/rad]: kisit carpanindan buyuk -> uygulanabilirken s = 0
+slack_w_quad = 1e5;          % gevseme karesel cezasi [1/rad^2]: QP s'de kesin disbukey
+kappa_lim    = min(mu*9.81/v_const^2, tan(delta_max)/L);   % kayma satirlarinda egrilik kirpma (surtunme / direksiyon siniri); Inf = kirpma yok
 %% --- Hata modeli ---
 Ac = [0, 1, 0, 0;
       0, -(Cf+Cr)/(m*v_const), (Cf+Cr)/m, (-Cf*lf+Cr*lr)/(m*v_const);
@@ -216,6 +220,10 @@ assignin('base','goal_x',   gp(1));
 assignin('base','goal_y',   gp(2));
 assignin('base','goal_tol', goal_tol);
 assignin('base','n_laps',   n_laps);
+assignin('base','alpha_max',    alpha_max);
+assignin('base','slack_w_lin',  slack_w_lin);
+assignin('base','slack_w_quad', slack_w_quad);
+assignin('base','kappa_lim',    kappa_lim);
 
 fprintf('Parametreler workspace''e yuklendi.\n');
 
